@@ -134,7 +134,9 @@ function renderSheet(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
   const rowMeta = ws["!rows"] || [];
-  const visibleRows = rows.filter((_, rowIndex) => !rowMeta[rowIndex]?.hidden);
+  const range = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : { s: { r: 0 } };
+  const rowOffset = range.s.r;
+  const visibleRows = rows.filter((_, rowIndex) => !rowMeta[rowIndex + rowOffset]?.hidden);
 
   if (!visibleRows.length) {
     const notice = document.createElement("p");
