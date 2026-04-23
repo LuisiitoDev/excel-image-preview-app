@@ -177,7 +177,7 @@ function renderSheet(wb, sheetName) {
 
   visibleCols.forEach((c, visibleIndex) => {
     const th = document.createElement("th");
-    const colName = header[c] !== "" ? header[c] : `Columna ${visibleIndex + 1}`;
+    const colName = hasCellValue(header[c]) ? header[c] : `Columna ${visibleIndex + 1}`;
     th.textContent = String(colName);
     headerRow.appendChild(th);
   });
