@@ -88,6 +88,10 @@ function showError(message) {
   errorBox.classList.remove("hidden");
 }
 
+function hasCellValue(cell) {
+  return cell !== null && cell !== undefined && String(cell).trim() !== "";
+}
+
 /* ── Image preview ───────────────────────────────── */
 function previewImage(file) {
   objectUrlCache = URL.createObjectURL(file);
@@ -148,13 +152,14 @@ function renderSheet(wb, sheetName) {
     for (let c = 0; c < maxCols; c++) {
       if (hasValueByCol[c]) continue;
       const cell = row[c];
-      hasValueByCol[c] = cell !== null && cell !== undefined && String(cell).trim() !== "";
+      hasValueByCol[c] = hasCellValue(cell);
     }
   });
 
-  const visibleCols = hasValueByCol
-    .map((hasValue, index) => (hasValue ? index : -1))
-    .filter((index) => index !== -1);
+  const visibleCols = hasValueByCol.reduce((acc, hasValue, index) => {
+    if (hasValue) acc.push(index);
+    return acc;
+  }, []);
 
   if (!visibleCols.length) {
     const notice = document.createElement("p");
