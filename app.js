@@ -88,6 +88,10 @@ function showError(message) {
   errorBox.classList.remove("hidden");
 }
 
+function hasCellValue(cell) {
+  return cell !== null && cell !== undefined && String(cell).trim() !== "";
+}
+
 /* ── Image preview ───────────────────────────────── */
 function previewImage(file) {
   objectUrlCache = URL.createObjectURL(file);
@@ -142,23 +146,46 @@ function renderSheet(wb, sheetName) {
   const maxCols = rows.reduce((m, row) => Math.max(m, row.length), 0);
   const header  = rows[0] || [];
   const body    = rows.slice(1);
+  const hasValueByCol = Array(maxCols).fill(false);
+
+  rows.forEach((row) => {
+    for (let c = 0; c < maxCols; c++) {
+      if (hasValueByCol[c]) continue;
+      const cell = row[c];
+      hasValueByCol[c] = hasCellValue(cell);
+    }
+  });
+
+  const visibleCols = hasValueByCol.reduce((acc, hasValue, index) => {
+    if (hasValue) acc.push(index);
+    return acc;
+  }, []);
+
+  if (!visibleCols.length) {
+    const notice = document.createElement("p");
+    notice.className = "empty-sheet-notice";
+    notice.textContent = `La hoja "${sheetName}" no contiene columnas con valores.`;
+    tableWrapper.innerHTML = "";
+    tableWrapper.appendChild(notice);
+    return;
+  }
 
   const fragment = document.createDocumentFragment();
   const table    = document.createElement("table");
   const thead    = table.createTHead();
   const headerRow = thead.insertRow();
 
-  for (let c = 0; c < maxCols; c++) {
+  visibleCols.forEach((c, visibleIndex) => {
     const th = document.createElement("th");
-    const colName = header[c] !== "" ? header[c] : `Columna ${c + 1}`;
+    const colName = hasCellValue(header[c]) ? header[c] : `Columna ${visibleIndex + 1}`;
     th.textContent = String(colName);
     headerRow.appendChild(th);
-  }
+  });
 
   const tbody = table.createTBody();
   body.forEach((row) => {
     const tr = tbody.insertRow();
-    for (let c = 0; c < maxCols; c++) {
+    for (const c of visibleCols) {
       const td = tr.insertCell();
       td.textContent = String(row[c] ?? "");
     }
