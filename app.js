@@ -37,8 +37,7 @@ fileInput.addEventListener("change", async (e) => {
   }
 
   showError(
-    `Formato no soportado: <strong>${escapeHtml(file.name)}</strong>. ` +
-    "Por favor sube un archivo <code>.xlsx</code> o una imagen."
+    `Formato no soportado: "${file.name}". Por favor sube un archivo .xlsx o una imagen.`
   );
 });
 
@@ -77,8 +76,8 @@ function showMeta(file) {
 }
 
 /* ── Error ───────────────────────────────────────── */
-function showError(html) {
-  errorBox.innerHTML = html;
+function showError(message) {
+  errorBox.textContent = message;
   errorBox.classList.remove("hidden");
 }
 
@@ -86,7 +85,7 @@ function showError(html) {
 function previewImage(file) {
   objectUrlCache = URL.createObjectURL(file);
   previewImg.src = objectUrlCache;
-  previewImg.alt = `Vista previa de ${escapeHtml(file.name)}`;
+  previewImg.alt = `Vista previa de ${file.name}`;
   imagePreview.classList.remove("hidden");
 }
 
