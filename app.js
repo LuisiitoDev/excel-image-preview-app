@@ -133,8 +133,10 @@ async function previewExcel(file) {
 function renderSheet(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  const rowMeta = ws["!rows"] || [];
+  const visibleRows = rows.filter((_, rowIndex) => !rowMeta[rowIndex]?.hidden);
 
-  if (!rows.length) {
+  if (!visibleRows.length) {
     const notice = document.createElement("p");
     notice.className = "empty-sheet-notice";
     notice.textContent = `La hoja "${sheetName}" está vacía.`;
@@ -143,12 +145,12 @@ function renderSheet(wb, sheetName) {
     return;
   }
 
-  const maxCols = rows.reduce((m, row) => Math.max(m, row.length), 0);
-  const header  = rows[0] || [];
-  const body    = rows.slice(1);
+  const maxCols = visibleRows.reduce((m, row) => Math.max(m, row.length), 0);
+  const header  = visibleRows[0] || [];
+  const body    = visibleRows.slice(1);
   const hasValueByCol = Array(maxCols).fill(false);
 
-  rows.forEach((row) => {
+  visibleRows.forEach((row) => {
     for (let c = 0; c < maxCols; c++) {
       if (hasValueByCol[c]) continue;
       const cell = row[c];
