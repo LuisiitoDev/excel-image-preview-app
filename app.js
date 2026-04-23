@@ -92,6 +92,13 @@ function hasCellValue(cell) {
   return cell !== null && cell !== undefined && String(cell).trim() !== "";
 }
 
+function getCellText(cell) {
+  if (cell === undefined) return "";
+  if (cell.w !== undefined) return cell.w;
+  if (cell.v !== undefined) return cell.v;
+  return "";
+}
+
 /* ── Image preview ───────────────────────────────── */
 function previewImage(file) {
   objectUrlCache = URL.createObjectURL(file);
@@ -132,11 +139,20 @@ async function previewExcel(file) {
 /* ── Sheet renderer ──────────────────────────────── */
 function renderSheet(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
   const rowMeta = ws["!rows"] || [];
-  const range = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : { s: { r: 0 } };
-  const rowOffset = range.s.r;
-  const visibleRows = rows.filter((_, rowIndex) => !rowMeta[rowIndex + rowOffset]?.hidden);
+  const range = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : null;
+
+  const visibleRows = [];
+  if (range) {
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      if (rowMeta[r]?.hidden) continue;
+      const row = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        row.push(getCellText(ws[XLSX.utils.encode_cell({ r, c })]));
+      }
+      visibleRows.push(row);
+    }
+  }
 
   if (!visibleRows.length) {
     const notice = document.createElement("p");
