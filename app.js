@@ -167,12 +167,12 @@ function renderSheet(wb, sheetName) {
   const thead    = table.createTHead();
   const headerRow = thead.insertRow();
 
-  for (const c of visibleCols) {
+  visibleCols.forEach((c, visibleIndex) => {
     const th = document.createElement("th");
-    const colName = header[c] !== "" ? header[c] : `Columna ${c + 1}`;
+    const colName = header[c] !== "" ? header[c] : `Columna ${visibleIndex + 1}`;
     th.textContent = String(colName);
     headerRow.appendChild(th);
-  }
+  });
 
   const tbody = table.createTBody();
   body.forEach((row) => {
