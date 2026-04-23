@@ -221,6 +221,13 @@ tbody tr:nth-child(even) td {
   margin: 0;
 }
 
+/* ── Empty sheet notice ──────────────────────────── */
+
+.empty-sheet-notice {
+  padding: 1rem;
+  color: var(--warn);
+}
+
 /* ── Utility ─────────────────────────────────────── */
 
 .hidden {

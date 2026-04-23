@@ -131,9 +131,11 @@ function renderSheet(wb, sheetName) {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
   if (!rows.length) {
-    tableWrapper.innerHTML =
-      `<p style="padding:1rem;color:var(--warn);">` +
-      `La hoja "${escapeHtml(sheetName)}" está vacía.</p>`;
+    const notice = document.createElement("p");
+    notice.className = "empty-sheet-notice";
+    notice.textContent = `La hoja "${sheetName}" está vacía.`;
+    tableWrapper.innerHTML = "";
+    tableWrapper.appendChild(notice);
     return;
   }
 
@@ -165,14 +167,4 @@ function renderSheet(wb, sheetName) {
   tableWrapper.innerHTML = "";
   fragment.appendChild(table);
   tableWrapper.appendChild(fragment);
-}
-
-/* ── Helpers ─────────────────────────────────────── */
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
