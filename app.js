@@ -142,13 +142,32 @@ function renderSheet(wb, sheetName) {
   const maxCols = rows.reduce((m, row) => Math.max(m, row.length), 0);
   const header  = rows[0] || [];
   const body    = rows.slice(1);
+  const visibleCols = [];
+
+  for (let c = 0; c < maxCols; c++) {
+    const columnHasValue = rows.some((row) => {
+      const cell = row[c];
+      return cell !== null && cell !== undefined && String(cell).trim() !== "";
+    });
+
+    if (columnHasValue) visibleCols.push(c);
+  }
+
+  if (!visibleCols.length) {
+    const notice = document.createElement("p");
+    notice.className = "empty-sheet-notice";
+    notice.textContent = `La hoja "${sheetName}" no contiene columnas con valores.`;
+    tableWrapper.innerHTML = "";
+    tableWrapper.appendChild(notice);
+    return;
+  }
 
   const fragment = document.createDocumentFragment();
   const table    = document.createElement("table");
   const thead    = table.createTHead();
   const headerRow = thead.insertRow();
 
-  for (let c = 0; c < maxCols; c++) {
+  for (const c of visibleCols) {
     const th = document.createElement("th");
     const colName = header[c] !== "" ? header[c] : `Columna ${c + 1}`;
     th.textContent = String(colName);
@@ -158,7 +177,7 @@ function renderSheet(wb, sheetName) {
   const tbody = table.createTBody();
   body.forEach((row) => {
     const tr = tbody.insertRow();
-    for (let c = 0; c < maxCols; c++) {
+    for (const c of visibleCols) {
       const td = tr.insertCell();
       td.textContent = String(row[c] ?? "");
     }
