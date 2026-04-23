@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview Excel o Imagen</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Preview de archivo</h1>
+      <p class="subtitle">Sube un <code>.xlsx</code> o una imagen (.png, .jpg, .jpeg, .webp, .gif)</p>
+
+      <label class="file-label" for="fileInput">
+        <span class="file-label-icon">📂</span>
+        <span class="file-label-text">Seleccionar archivo…</span>
+        <input id="fileInput" type="file" accept=".xlsx,image/*" />
+      </label>
+
+      <section id="meta" class="meta hidden" aria-live="polite"></section>
+
+      <section id="errorBox" class="error-box hidden" role="alert" aria-live="assertive"></section>
+
+      <section id="excelPreview" class="hidden" aria-label="Vista previa de Excel">
+        <div class="sheet-header">
+          <label for="sheetSelect">Hoja:</label>
+          <select id="sheetSelect"></select>
+        </div>
+        <div id="tableWrapper" class="table-wrapper"></div>
+      </section>
+
+      <section id="imagePreview" class="hidden" aria-label="Vista previa de imagen">
+        <img id="previewImg" alt="Vista previa de imagen" />
+      </section>
+
+      <section id="emptyState" class="empty" aria-label="Estado vacío">
+        <span class="empty-icon">📄</span>
+        <p>Aún no has subido ningún archivo.</p>
+      </section>
+    </main>
+
+    <script src="./xlsx.full.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
