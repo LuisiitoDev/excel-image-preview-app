@@ -142,16 +142,19 @@ function renderSheet(wb, sheetName) {
   const maxCols = rows.reduce((m, row) => Math.max(m, row.length), 0);
   const header  = rows[0] || [];
   const body    = rows.slice(1);
-  const visibleCols = [];
+  const hasValueByCol = Array(maxCols).fill(false);
 
-  for (let c = 0; c < maxCols; c++) {
-    const columnHasValue = rows.some((row) => {
+  rows.forEach((row) => {
+    for (let c = 0; c < maxCols; c++) {
+      if (hasValueByCol[c]) continue;
       const cell = row[c];
-      return cell !== null && cell !== undefined && String(cell).trim() !== "";
-    });
+      hasValueByCol[c] = cell !== null && cell !== undefined && String(cell).trim() !== "";
+    }
+  });
 
-    if (columnHasValue) visibleCols.push(c);
-  }
+  const visibleCols = hasValueByCol
+    .map((hasValue, index) => (hasValue ? index : -1))
+    .filter((index) => index !== -1);
 
   if (!visibleCols.length) {
     const notice = document.createElement("p");
