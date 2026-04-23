@@ -69,9 +69,16 @@ function updateFileLabel(name) {
 function showMeta(file) {
   const mb = (file.size / (1024 * 1024)).toFixed(2);
   const type = file.type || "desconocido";
-  meta.innerHTML =
-    `Archivo: <strong>${escapeHtml(file.name)}</strong> &nbsp;·&nbsp; ` +
-    `Tamaño: ${mb}&nbsp;MB &nbsp;·&nbsp; Tipo: ${escapeHtml(type)}`;
+  const strong = document.createElement("strong");
+
+  meta.textContent = "";
+  strong.textContent = file.name;
+
+  meta.appendChild(document.createTextNode("Archivo: "));
+  meta.appendChild(strong);
+  meta.appendChild(
+    document.createTextNode(` \u00A0·\u00A0 Tamaño: ${mb}\u00A0MB \u00A0·\u00A0 Tipo: ${type}`)
+  );
   meta.classList.remove("hidden");
 }
 
