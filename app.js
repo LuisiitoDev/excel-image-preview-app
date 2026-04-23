@@ -112,7 +112,7 @@ async function previewExcel(file) {
   let wb;
   try {
     const data = await file.arrayBuffer();
-    wb = XLSX.read(data, { type: "array" });
+    wb = XLSX.read(data, { type: "array", cellStyles: true });
   } catch {
     showError("No se pudo leer el archivo .xlsx. Verifica que sea un libro de Excel válido.");
     return;
@@ -140,75 +140,71 @@ async function previewExcel(file) {
 function renderSheet(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   const rowMeta = ws["!rows"] || [];
+  const colMeta = ws["!cols"] || [];
   const range = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : null;
 
-  const visibleRows = [];
-  if (range) {
-    for (let r = range.s.r; r <= range.e.r; r++) {
-      if (rowMeta[r]?.hidden) continue;
-      const row = [];
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        row.push(getCellText(ws[XLSX.utils.encode_cell({ r, c })]));
-      }
-      visibleRows.push(row);
-    }
-  }
-
-  if (!visibleRows.length) {
+  const showEmpty = (msg) => {
     const notice = document.createElement("p");
     notice.className = "empty-sheet-notice";
-    notice.textContent = `La hoja "${sheetName}" está vacía.`;
+    notice.textContent = msg;
     tableWrapper.innerHTML = "";
     tableWrapper.appendChild(notice);
+  };
+
+  if (!range) {
+    showEmpty(`La hoja "${sheetName}" está vacía.`);
     return;
   }
 
-  const maxCols = visibleRows.reduce((m, row) => Math.max(m, row.length), 0);
-  const header  = visibleRows[0] || [];
-  const body    = visibleRows.slice(1);
-  const hasValueByCol = Array(maxCols).fill(false);
+  // Collect visible row indices (skip rows marked hidden)
+  const visibleRowIdxs = [];
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    if (rowMeta[r]?.hidden) continue;
+    visibleRowIdxs.push(r);
+  }
 
-  visibleRows.forEach((row) => {
-    for (let c = 0; c < maxCols; c++) {
-      if (hasValueByCol[c]) continue;
-      const cell = row[c];
-      hasValueByCol[c] = hasCellValue(cell);
-    }
-  });
+  // Collect visible column indices (skip columns marked hidden AND empty columns)
+  const visibleColIdxs = [];
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    if (colMeta[c]?.hidden) continue;
+    const hasValue = visibleRowIdxs.some((r) => {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })];
+      return hasCellValue(getCellText(cell));
+    });
+    if (hasValue) visibleColIdxs.push(c);
+  }
 
-  const visibleCols = hasValueByCol.reduce((acc, hasValue, index) => {
-    if (hasValue) acc.push(index);
-    return acc;
-  }, []);
-
-  if (!visibleCols.length) {
-    const notice = document.createElement("p");
-    notice.className = "empty-sheet-notice";
-    notice.textContent = `La hoja "${sheetName}" no contiene columnas con valores.`;
-    tableWrapper.innerHTML = "";
-    tableWrapper.appendChild(notice);
+  if (!visibleRowIdxs.length || !visibleColIdxs.length) {
+    showEmpty(`La hoja "${sheetName}" está vacía.`);
     return;
   }
 
-  const fragment = document.createDocumentFragment();
-  const table    = document.createElement("table");
-  const thead    = table.createTHead();
+  // Build data rows using only the visible indices
+  const visibleRows = visibleRowIdxs.map((r) =>
+    visibleColIdxs.map((c) => getCellText(ws[XLSX.utils.encode_cell({ r, c })]))
+  );
+
+  const header = visibleRows[0];
+  const body   = visibleRows.slice(1);
+
+  const fragment  = document.createDocumentFragment();
+  const table     = document.createElement("table");
+  const thead     = table.createTHead();
   const headerRow = thead.insertRow();
 
-  visibleCols.forEach((c, visibleIndex) => {
+  header.forEach((cell, visibleIndex) => {
     const th = document.createElement("th");
-    const colName = hasCellValue(header[c]) ? header[c] : `Columna ${visibleIndex + 1}`;
-    th.textContent = String(colName);
+    th.textContent = String(hasCellValue(cell) ? cell : `Columna ${visibleIndex + 1}`);
     headerRow.appendChild(th);
   });
 
   const tbody = table.createTBody();
   body.forEach((row) => {
     const tr = tbody.insertRow();
-    for (const c of visibleCols) {
+    row.forEach((cell) => {
       const td = tr.insertCell();
-      td.textContent = String(row[c] ?? "");
-    }
+      td.textContent = String(cell ?? "");
+    });
   });
 
   tableWrapper.innerHTML = "";
